@@ -32,4 +32,5 @@ Databases: MySQL, MongoDB, or Firebase
 Deployment: Flask, FastAPI, AWS, or Google Cloud
 Expected Outcome
 A fully functional AI-based recommendation system that enhances user engagement and business value by providing accurate and relevant recommendations.
-
+Output:
+![Image](https://github.com/user-attachments/assets/dc2be086-99a8-4c7f-989d-d05d0c340d7b)
