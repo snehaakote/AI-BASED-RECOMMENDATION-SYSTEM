@@ -1,0 +1,80 @@
+package com.demo;
+
+import java.util.*;
+
+class RecommendationSystem {
+    private Map<String, Map<String, Integer>> userRatings;
+
+    public RecommendationSystem() {
+        userRatings = new HashMap<>();
+    }
+
+    public void addRating(String user, String item, int rating) {
+        userRatings.putIfAbsent(user, new HashMap<>());
+        userRatings.get(user).put(item, rating);
+    }
+
+    public List<String> recommendItems(String user) {
+        Map<String, Integer> targetUserRatings = userRatings.get(user);
+        if (targetUserRatings == null) return Collections.emptyList();
+        
+        Map<String, Double> similarityScores = new HashMap<>();
+        
+        for (String otherUser : userRatings.keySet()) {
+            if (!otherUser.equals(user)) {
+                double similarity = computeSimilarity(targetUserRatings, userRatings.get(otherUser));
+                similarityScores.put(otherUser, similarity);
+            }
+        }
+        
+        return getTopRecommendations(user, similarityScores);
+    }
+
+    private double computeSimilarity(Map<String, Integer> user1, Map<String, Integer> user2) {
+        Set<String> commonItems = new HashSet<>(user1.keySet());
+        commonItems.retainAll(user2.keySet());
+        
+        if (commonItems.isEmpty()) return 0;
+        
+        double sum = 0;
+        for (String item : commonItems) {
+            sum += user1.get(item) * user2.get(item);
+        }
+        return sum / commonItems.size();
+    }
+
+    private List<String> getTopRecommendations(String user, Map<String, Double> similarityScores) {
+        PriorityQueue<Map.Entry<String, Double>> pq = new PriorityQueue<>(
+            (a, b) -> Double.compare(b.getValue(), a.getValue()));
+        pq.addAll(similarityScores.entrySet());
+        
+        Set<String> seenItems = new HashSet<>(userRatings.get(user).keySet());
+        List<String> recommendations = new ArrayList<>();
+        
+        while (!pq.isEmpty() && recommendations.size() < 5) {
+            Map.Entry<String, Double> entry = pq.poll();
+            String similarUser = entry.getKey();
+            
+            for (String item : userRatings.get(similarUser).keySet()) {
+                if (!seenItems.contains(item) && !recommendations.contains(item)) {
+                    recommendations.add(item);
+                }
+                if (recommendations.size() >= 5) break;
+            }
+        }
+        return recommendations;
+    }
+
+    public static void main(String[] args) {
+        RecommendationSystem system = new RecommendationSystem();
+        
+        system.addRating("Alice", "Item1", 5);
+        system.addRating("Alice", "Item2", 3);
+        system.addRating("Bob", "Item1", 4);
+        system.addRating("Bob", "Item3", 5);
+        system.addRating("Charlie", "Item2", 4);
+        system.addRating("Charlie", "Item3", 3);
+        
+        System.out.println("Recommendations for Alice: " + system.recommendItems("Alice"));
+    }
+}
